@@ -1,0 +1,25 @@
+{
+  "name": "pelican-test",
+  "version": "0.1.0",
+  "description": "《鹈鹕测试》— a pelican rides a bicycle through twenty kinds of pictures. Stage 1 is a silent skeleton.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "preview": "node tools/preview.mjs",
+    "test": "node --test",
+    "shot": "node tools/shot.mjs",
+    "render": "node tools/render.mjs",
+    "sheet": "node tools/sheet.mjs",
+    "encode": "node tools/encode.mjs",
+    "fps": "node tools/fps-compare.mjs",
+    "fonts": "python3 tools/build-fonts.py"
+  },
+  "dependencies": {
+    "p5": "2.4.0",
+    "p5.brush": "3.0.0",
+    "puppeteer-core": "24.15.0"
+  }
+}
