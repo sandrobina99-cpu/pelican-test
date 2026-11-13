@@ -2,7 +2,11 @@
  * Two drawings of the same pose: a clean default, and a pencil plate.
  * Caller places the rig: translate to the rear contact, then scale(s, -s)
  * so local +y (up) points up the screen.
+ *
+ * Draw order: far leg behind the frame, near leg in front of it.
  */
+
+import { RIG } from "../beat/world.js";
 
 const INK = "#241c16";
 const BODY = "#F4F0E6";
@@ -12,6 +16,23 @@ const POUCH = "#F0B07A";
 const FRAME = "#2A2E33";
 const TIRE = "#1A1C1F";
 const RIM = "#C5CAD1";
+
+const NEAR = {
+  leg: "#F0B090",
+  legInk: "#8A4A32",
+  foot: "#E36A28",
+  web: "#F09458",
+  footInk: "#7A3414",
+  pedal: "#2C3138",
+};
+const FAR = {
+  leg: "#C4A090",
+  legInk: "#6A5348",
+  foot: "#C47A52",
+  web: "#D4A088",
+  footInk: "#6A4838",
+  pedal: "#3A3E44",
+};
 
 function poly(p, pts) {
   p.beginShape();
@@ -49,87 +70,148 @@ function wheel(p, hub, radius, angle, pencil) {
   p.circle(hub.x, hub.y, pencil ? 3.5 : 8);
 }
 
-function limb(p, hip, knee, foot, weight, color) {
-  segment(p, hip, knee, weight + 2.2, INK);
-  segment(p, knee, foot, weight + 2.2, INK);
-  segment(p, hip, knee, weight, color);
-  segment(p, knee, foot, weight, color);
-  p.noStroke();
-  p.fill(color);
-  p.circle(knee.x, knee.y, weight);
-  p.stroke(INK);
-  p.strokeWeight(1.2);
-  p.fill("#4a4e55");
-  p.circle(foot.x, foot.y, 8);
+function drawCrank(p, bb, spindle, weight) {
+  p.stroke("#1c1e22");
+  p.strokeWeight(weight);
+  p.line(bb.x, bb.y, spindle.x, spindle.y);
 }
 
-function crank(p, bb, foot) {
-  segment(p, bb, foot, 4, "#1a1c1f");
+/** Level pedal. The spindle is the ankle. */
+function drawPedal(p, spindle, color) {
+  p.rectMode(p.CORNER);
+  p.noStroke();
+  p.fill(color);
+  p.rect(spindle.x - 13, spindle.y - 2.6, 26, 5.2, 1.4);
+  p.fill("#f2f4f6");
+  p.circle(spindle.x, spindle.y, 4);
+}
+
+function drawLeg(p, hip, knee, ankle, weight, color, ink) {
+  p.strokeCap(p.ROUND);
+  p.strokeJoin(p.ROUND);
+  p.stroke(ink);
+  p.strokeWeight(weight + 3.2);
+  p.line(hip.x, hip.y, knee.x, knee.y);
+  p.line(knee.x, knee.y, ankle.x, ankle.y);
+  p.stroke(color);
+  p.strokeWeight(weight);
+  p.line(hip.x, hip.y, knee.x, knee.y);
+  p.line(knee.x, knee.y, ankle.x, ankle.y);
+  p.noStroke();
+  p.fill(ink);
+  p.circle(knee.x, knee.y, weight + 2);
+  p.fill(color);
+  p.circle(knee.x, knee.y, weight * 0.82);
+}
+
+function drawFoot(p, ankle, outline, palette, pencil) {
+  if (!outline || outline.length < 3) return;
+  if (pencil) {
+    p.noFill();
+    p.stroke(INK);
+    p.strokeWeight(1.4);
+    poly(p, outline);
+    return;
+  }
+  p.fill(palette.web);
+  p.stroke(palette.footInk);
+  p.strokeWeight(1.5);
+  poly(p, outline);
+  p.noStroke();
+  p.fill(palette.foot);
+  // Three toe pads, forward of the spindle, so the webbing reads at small sizes.
+  p.ellipse(ankle.x + 16, ankle.y + 2, 12, 5);
+  p.ellipse(ankle.x + 19, ankle.y + 7, 13, 5.5);
+  p.ellipse(ankle.x + 15, ankle.y + 12, 11, 5);
+}
+
+function drawLimb(p, pose, side, pencil) {
+  const pts = pose.points;
+  const far = side === "far";
+  const hip = pts.hip;
+  const knee = far ? pts.kneeFar : pts.kneeNear;
+  const ankle = far ? pts.ankleFar : pts.ankleNear;
+  const foot = far ? pts.footFar : pts.footNear;
+  const palette = far ? FAR : NEAR;
+  const weight = pencil ? (far ? 1.4 : 1.7) : (far ? 8.5 : 11);
+  drawCrank(p, pts.bb, ankle, pencil ? 1.2 : far ? 3.4 : 4.2);
+  if (!pencil) drawPedal(p, ankle, palette.pedal);
+  if (pencil) {
+    p.stroke(INK);
+    p.strokeWeight(weight);
+    p.line(hip.x, hip.y, knee.x, knee.y);
+    p.line(knee.x, knee.y, ankle.x, ankle.y);
+  } else {
+    drawLeg(p, hip, knee, ankle, weight, palette.leg, palette.legInk);
+  }
+  drawFoot(p, ankle, foot, palette, pencil);
 }
 
 export function drawRig(p, pose, style = "default") {
   const pencil = style === "pencil";
   const pts = pose.points;
-  const { rear, front, bb } = pts;
-  const radius = 46;
 
   p.push();
   p.strokeCap(p.ROUND);
   p.strokeJoin(p.ROUND);
   p.ellipseMode(p.CENTER);
+  p.rectMode(p.CORNER);
 
   if (pencil) {
     p.push();
     p.translate(1.4, 0.6);
-    drawRigBody(p, pose, true, 0.55);
+    drawRigBody(p, pose, true);
     p.pop();
   }
-  drawRigBody(p, pose, pencil, 1);
-
+  drawRigBody(p, pose, pencil);
   p.pop();
 
-  function drawRigBody(p, pose, pencil, alphaMul) {
+  function drawRigBody(p, pose, pencil) {
     const pts = pose.points;
-    const body = pencil ? INK : BODY;
-    const shade = pencil ? "#5a5048" : BODY_SHADE;
+    const { rear, front, bb } = pts;
+    const body = pencil ? "#f7f3ea" : BODY;
+    const shade = pencil ? "#e4ddd0" : BODY_SHADE;
     const beak = pencil ? INK : BEAK;
-    const pouch = pencil ? "#6a5344" : POUCH;
+    const pouch = pencil ? "#c4b09a" : POUCH;
     const frame = pencil ? INK : FRAME;
-    p.push();
-    if (alphaMul < 1) {
-      // pencil ghost; p5 stroke alpha is per-call via the color string
-    }
 
-    // shadow
     if (!pencil) {
       p.noStroke();
       p.fill(30, 22, 14, 45);
       p.ellipse((rear.x + front.x) / 2, 4, 210, 14);
     }
 
-    wheel(p, rear, radius, pose.wheel, pencil);
-    wheel(p, front, radius, pose.wheel, pencil);
+    wheel(p, rear, RIG.wheelR, pose.wheel, pencil);
+    wheel(p, front, RIG.wheelR, pose.wheel, pencil);
 
-    // frame
-    segment(p, rear, bb, pencil ? 1.5 : 6, frame);
+    drawLimb(p, pose, "far", pencil);
+
+    // Stop the chainstay at the chainring so the rear pedal is not buried in the tube.
+    const stay = RIG.chainringR + 2;
+    const sx = bb.x - rear.x;
+    const sy = bb.y - rear.y;
+    const sl = Math.hypot(sx, sy) || 1;
+    const stayEnd = { x: bb.x - (sx / sl) * stay, y: bb.y - (sy / sl) * stay };
+    segment(p, rear, stayEnd, pencil ? 1.5 : 5.5, frame);
     segment(p, bb, pts.headTube, pencil ? 1.5 : 6, frame);
     segment(p, pts.headTube, pts.seat, pencil ? 1.5 : 5.5, frame);
     segment(p, pts.seat, rear, pencil ? 1.3 : 5, frame);
     segment(p, pts.headTube, front, pencil ? 1.5 : 5.5, frame);
 
-    // chain + chainring
     p.noFill();
     p.stroke(pencil ? "#5c5148" : "#3a3e44");
-    p.strokeWeight(pencil ? 0.8 : 2);
-    p.line(bb.x, bb.y + 11, rear.x + 10, rear.y - 2);
-    p.line(bb.x, bb.y - 11, rear.x + 10, rear.y + 6);
-    p.circle(bb.x, bb.y, pencil ? 16 : 24);
+    p.strokeWeight(pencil ? 0.8 : 2.2);
+    p.line(bb.x, bb.y + RIG.chainringR * 0.75, rear.x + 12, rear.y - 4);
+    p.line(bb.x, bb.y - RIG.chainringR * 0.75, rear.x + 12, rear.y + 8);
+    p.stroke(pencil ? INK : "#1c1e22");
+    p.strokeWeight(pencil ? 1.4 : 3.5);
+    p.circle(bb.x, bb.y, RIG.chainringR * 2);
+    p.strokeWeight(pencil ? 0.8 : 1.5);
+    p.circle(bb.x, bb.y, RIG.chainringR * 1.15);
+    p.noStroke();
+    p.fill(pencil ? INK : "#1c1e22");
+    p.circle(bb.x, bb.y, 6);
 
-    // far leg under the body
-    crank(p, bb, pts.pedalFar);
-    limb(p, pts.hip, pts.kneeFar, pts.pedalFar, pencil ? 1.3 : 6.5, pencil ? "#5c5148" : "#d9d3c6");
-
-    // tail
     if (pencil) {
       p.noFill();
       p.stroke(INK);
@@ -139,12 +221,11 @@ export function drawRig(p, pose, style = "default") {
       p.fill(shade);
     }
     poly(p, [
-      { x: pts.body.x - 36, y: pts.body.y + 8 },
+      { x: pts.body.x - 40, y: pts.body.y + 6 },
       pts.tailTip,
-      { x: pts.tail.x + 8, y: pts.tail.y - 16 },
+      { x: pts.tail.x + 6, y: pts.tail.y - 14 },
     ]);
 
-    // body
     if (pencil) {
       p.noFill();
       p.stroke(INK);
@@ -154,32 +235,27 @@ export function drawRig(p, pose, style = "default") {
       p.strokeWeight(2);
       p.fill(body);
     }
-    p.ellipse(pts.body.x, pts.body.y, 128, 56);
+    p.ellipse(pts.body.x, pts.body.y, 126, 52);
 
-    // folded far wing
     if (!pencil) {
       p.stroke(INK);
       p.strokeWeight(1.5);
       p.fill(shade);
-      p.ellipse(pts.body.x - 8, pts.body.y + 4, 78, 28);
+      p.ellipse(pts.body.x - 6, pts.body.y + 2, 76, 26);
     }
 
-    // neck
-    p.noFill();
-    p.stroke(pencil ? INK : INK);
-    p.strokeWeight(pencil ? 1.6 : 16);
     const n = pts.neck;
     const h = pts.head;
+    p.noFill();
     if (!pencil) {
       p.stroke(body);
       p.strokeWeight(16);
-      p.bezier(n.x, n.y, n.x + 8, n.y + 28, h.x - 28, h.y - 8, h.x - 6, h.y - 4);
-      p.stroke(INK);
-      p.strokeWeight(2);
+      p.bezier(n.x, n.y, n.x + 8, n.y + 26, h.x - 26, h.y - 6, h.x - 4, h.y - 2);
     }
-    p.bezier(n.x, n.y, n.x + 8, n.y + 28, h.x - 28, h.y - 8, h.x - 6, h.y - 4);
+    p.stroke(INK);
+    p.strokeWeight(pencil ? 1.6 : 2);
+    p.bezier(n.x, n.y, n.x + 8, n.y + 26, h.x - 26, h.y - 6, h.x - 4, h.y - 2);
 
-    // head
     if (pencil) {
       p.noFill();
       p.stroke(INK);
@@ -191,7 +267,6 @@ export function drawRig(p, pose, style = "default") {
     }
     p.ellipse(h.x, h.y, 40, 32);
 
-    // beak + pouch
     if (pencil) {
       p.noFill();
       p.stroke(INK);
@@ -203,9 +278,9 @@ export function drawRig(p, pose, style = "default") {
     }
     poly(p, [pts.beakTop, pts.beakTip, { x: pts.beakTip.x - 8, y: pts.beakTip.y - 7 }, pts.beakLow]);
     if (!pencil) p.fill(pouch);
+    else p.noFill();
     poly(p, [pts.beakLow, { x: pts.beakTip.x - 18, y: pts.beakTip.y - 8 }, pts.pouch]);
 
-    // eye
     p.stroke(INK);
     p.strokeWeight(pencil ? 1 : 1.4);
     p.fill(pencil ? "#f4efe6" : "#fffdf8");
@@ -214,7 +289,6 @@ export function drawRig(p, pose, style = "default") {
     p.fill(INK);
     p.circle(pts.eye.x + 1.2, pts.eye.y + 0.4, pencil ? 2.2 : 3.6);
 
-    // near wing / arm to the bar
     if (pencil) {
       p.noFill();
       p.stroke(INK);
@@ -225,39 +299,34 @@ export function drawRig(p, pose, style = "default") {
       p.strokeWeight(2);
       p.fill(shade);
       p.triangle(
-        pts.wing.x - 16,
-        pts.wing.y - 8,
-        pts.wing.x + 10,
-        pts.wing.y + 14,
+        pts.wing.x - 14,
+        pts.wing.y - 6,
+        pts.wing.x + 8,
+        pts.wing.y + 12,
         pts.wingTip.x,
         pts.wingTip.y,
       );
     }
 
-    // seat + bars
     if (!pencil) {
       p.noStroke();
       p.fill("#1c1e22");
-      p.ellipse(pts.seat.x, pts.seat.y + 2, 22, 8);
+      p.ellipse(pts.seat.x, pts.seat.y + 1, 26, 9);
     } else {
       p.noFill();
       p.stroke(INK);
       p.strokeWeight(1.3);
-      p.ellipse(pts.seat.x, pts.seat.y + 2, 22, 8);
+      p.ellipse(pts.seat.x, pts.seat.y + 1, 26, 9);
     }
     segment(p, pts.headTube, pts.handle, pencil ? 1.4 : 5, frame);
     segment(
       p,
-      { x: pts.handle.x - 14, y: pts.handle.y + 3 },
-      { x: pts.handle.x + 8, y: pts.handle.y + 7 },
-      pencil ? 1.5 : 5,
+      { x: pts.handle.x - 16, y: pts.handle.y + 2 },
+      { x: pts.handle.x + 8, y: pts.handle.y + 6 },
+      pencil ? 1.5 : 5.5,
       frame,
     );
 
-    // near leg
-    crank(p, bb, pts.pedalNear);
-    limb(p, pts.hip, pts.kneeNear, pts.pedalNear, pencil ? 1.5 : 7.2, pencil ? INK : BODY);
-
-    p.pop();
+    drawLimb(p, pose, "near", pencil);
   }
 }

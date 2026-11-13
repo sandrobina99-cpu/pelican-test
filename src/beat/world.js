@@ -53,14 +53,17 @@ export const TITLE = {
 export const RIG = {
   wheelR: 46,
   wheelbase: 178,
-  pedalR: 20,
+  /** Crank length. Pedal spindles sit on this circle, outside the chainring. */
+  pedalR: 22,
+  chainringR: 15,
   femur: 58,
   tibia: 60,
-  bb: { x: 84, y: 34 },
-  hip: { x: 74, y: 114 },
-  seat: { x: 60, y: 118 },
-  headTube: { x: 150, y: 110 },
-  handle: { x: 168, y: 134 },
+  bb: { x: 84, y: 38 },
+  /** Hip and saddle are the same point: top of the seat post. It does not bob. */
+  hip: { x: 72, y: 126 },
+  seat: { x: 72, y: 126 },
+  headTube: { x: 150, y: 112 },
+  handle: { x: 168, y: 136 },
 };
 
 /** Outro wall. 7×3, about 90% of frame width. */

@@ -28,7 +28,8 @@ async function makePage() {
   const page = await browser.newPage();
   await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
   page.on("pageerror", (err) => console.error("PAGE", err.message));
-  await page.goto(`${server.url}/public/index.html?export=1`, {
+  const pagePath = args.page || "/public/index.html?export=1";
+  await page.goto(`${server.url}${pagePath}`, {
     waitUntil: "networkidle0",
     timeout: 120000,
   });
@@ -41,13 +42,17 @@ async function renderIndex(page, index) {
   const file = path.join(outDir, `f${String(index).padStart(5, "0")}.png`);
   if (fs.existsSync(file) && fs.statSync(file).size > 1000) return false;
   const dataUrl = await page.evaluate((time) => {
+    // Draw twice so the read sees this time, not the previous frame's buffer.
+    window.renderAt(time);
     window.renderAt(time);
     const out = document.createElement("canvas");
     out.width = 1920;
     out.height = 1080;
     const ctx = out.getContext("2d");
-    ctx.drawImage(document.querySelector("#gl"), 0, 0);
-    ctx.drawImage(document.querySelector("#text"), 0, 0);
+    const gl = document.querySelector("#gl") || document.querySelector("canvas");
+    ctx.drawImage(gl, 0, 0);
+    const text = document.querySelector("#text");
+    if (text) ctx.drawImage(text, 0, 0);
     return out.toDataURL("image/png");
   }, t);
   const payload = dataUrl.split(",")[1];
