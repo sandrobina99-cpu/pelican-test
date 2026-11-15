@@ -1,7 +1,9 @@
 import { CUES, ramp, smoothstep } from "../beat/cues.js";
 import { OUTRO_START, sectionStart } from "../beat/timeline.js";
 import { poseAt } from "../rig/pose.js";
+import { styleForSection } from "../config.js";
 import { drawRig } from "../rig/draw.js";
+import { drawStyledRig } from "../rig/styles.js";
 import { ANCHOR_X, GRID, GROUND_Y, OUT_H, OUT_W } from "../beat/world.js";
 import { SECTIONS } from "./catalog.js";
 import { SANS, SERIF, roundRect, setFont, text } from "../kit/text2d.js";
@@ -101,7 +103,9 @@ function drawThumb(p, meta) {
   p.push();
   p.translate(500 - ANCHOR_X, GROUND_Y - 10);
   p.scale(1, -1);
-  drawRig(p, pose, "default");
+  const style = styleForSection(meta.id);
+  if (style === "default") drawRig(p, pose, "default");
+  else drawStyledRig(p, pose, style);
   p.pop();
   p.pop();
 }

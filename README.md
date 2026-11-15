@@ -2,7 +2,7 @@
 
 一只鹈鹕骑着自行车，沿一条路穿过 20 种图画。全片 2 分 17 秒，1920×1080，由 p5.js 和 p5.brush 逐帧画出来。
 
-现在仓库里是 **Stage 0（规格）和 Stage 1（无声骨架）**。20 个版块还是标了名字的色块，没有音乐。正式画风从下一阶段开始。
+现在到 **Stage 2**。撒哈拉岩画、宋代山水、竖屏短视频三格已经按各自的画法画完，其余 17 格仍是标了名字的色块。还没有音乐。成片帧率在 `src/config.js`，默认 60 fps。
 
 ## 跑预览
 
@@ -27,13 +27,13 @@ node tools/sheet.mjs --frames frames/film --fps 30 --every 30 --out out/contact-
 npm run fps
 ```
 
-`npm run fps` 把 t = 8–12 秒分别做成 30 fps 和 60 fps 的短片，方便以后选定帧率。Chrome 找不到时设置 `CHROME_PATH`。
+不传 `--fps` 时，`tools/render.mjs` 用配置里的 60 fps。Chrome 找不到时设置 `CHROME_PATH`。
 
 ## 目录
 
 - `src/kit` 纸纹、屏幕坐标、2D 文字
 - `src/beat` 节拍、时间表、世界尺寸
-- `src/rig` 鹈鹕和自行车的姿势，以及两种画法
+- `src/rig` 鹈鹕和自行车的姿势。默认填色、素描、岩画和山水共用这一套骨头
 - `src/scenes` 序幕、20 个版块、结尾，一个版块一个文件
 - `src/main` 镜头、调度、预览页
 - `tools` 逐帧渲染、单帧截图、接触表、ffmpeg

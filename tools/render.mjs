@@ -1,10 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import puppeteer from "puppeteer-core";
+import { FILM } from "../src/config.js";
 import { chromeArgs, chromePath, parseArgs, root, startServer } from "./lib.mjs";
 
 const args = parseArgs();
-const fps = Number(args.fps ?? 30);
+const fps = Number(args.fps ?? FILM.renderFps);
 const from = Number(args.from ?? 0);
 const to = Number(args.to ?? 137);
 const workers = Math.max(1, Number(args.workers ?? 3));

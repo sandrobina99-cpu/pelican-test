@@ -8,6 +8,7 @@ import { parseArgs, root } from "./lib.mjs";
 const args = parseArgs();
 const fps = Number(args.fps ?? 30);
 const every = Number(args.every ?? fps);
+const from = Number(args.from ?? 0);
 const framesDir = path.resolve(root, args.frames || "frames/film");
 const out = path.resolve(root, args.out || "out/contact-sheet.png");
 const files = fs.readdirSync(framesDir).filter((name) => /^f\d+\.png$/.test(name)).sort();
@@ -18,7 +19,7 @@ for (let i = 0; i < files.length; i += every) picks.push(i);
 if (picks.at(-1) !== files.length - 1) picks.push(files.length - 1);
 
 const cells = picks.map((index) => {
-  const t = index / fps;
+  const t = from + index / fps;
   const info = at(t);
   const m = Math.floor(t / 60);
   const s = (t - m * 60).toFixed(1).padStart(4, "0");

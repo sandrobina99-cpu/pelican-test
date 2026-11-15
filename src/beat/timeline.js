@@ -7,6 +7,7 @@
  */
 
 import { ART } from "./world.js";
+import { motionScale as scaleAt } from "../config.js";
 
 export const BPM = 120;
 export const BEAT = 60 / BPM;
@@ -39,23 +40,58 @@ export function crossingTimes() {
   return times;
 }
 
+/** Instantaneous cruise scale. See src/config.js. */
+export function motionScale(sectionId, localT) {
+  return scaleAt(sectionId, localT);
+}
+
+/** Seconds of motion accumulated inside one section. Full bar-span integrates to 6. */
+export function integratedScale(sectionId, localT) {
+  const t = Math.max(0, Math.min(SECTION_DUR, localT));
+  const cuts = [0, 2, 4, SECTION_DUR];
+  let acc = 0;
+  for (let i = 0; i < cuts.length - 1; i++) {
+    const a = cuts[i];
+    const b = cuts[i + 1];
+    if (t <= a) break;
+    const mid = a + (Math.min(t, b) - a) / 2;
+    acc += (Math.min(t, b) - a) * motionScale(sectionId, mid);
+  }
+  return acc;
+}
+
+/**
+ * Clock time whose pedal phase matches the slowed or frozen stretches.
+ * Profiles are built so this equals t again at every section boundary.
+ */
+export function motionTime(t) {
+  if (t <= INTRO_DUR) return t;
+  for (let k = 1; k <= SECTION_COUNT; k++) {
+    const end = sectionEnd(k);
+    if (t < end) return sectionStart(k) + integratedScale(k, t - sectionStart(k));
+  }
+  return t;
+}
+
 /**
  * Forward position of the rider's anchor.
- * Section k = 1 occupies world x in [0, SECTION_W).
- * Constant cruise in stage 1 (motionScale is 1). Later gags may
- * integrate a per-section scale; keep this the single source of x(t).
+ * Section k = 1 occupies world x in [0, SECTION_W) when travel scale stays 1.
  */
-export function motionScale(_sectionId, _localT) {
-  return 1;
-}
-
 export function worldX(t) {
-  return (t - INTRO_DUR) * (SECTION_W / SECTION_DUR);
+  const cruise = SECTION_W / SECTION_DUR;
+  if (t <= INTRO_DUR) return (t - INTRO_DUR) * cruise;
+  for (let k = 1; k <= SECTION_COUNT; k++) {
+    const end = sectionEnd(k);
+    if (t < end) {
+      return (k - 1) * SECTION_W + integratedScale(k, t - sectionStart(k)) * cruise;
+    }
+  }
+  return SECTION_COUNT * SECTION_W + (t - OUTRO_START) * cruise;
 }
 
-/** Radians, increasing. One full turn every PEDAL_PERIOD. */
+/** Radians, increasing. One full turn every PEDAL_PERIOD at cruise. */
 export function pedalAngle(t) {
-  return (t / PEDAL_PERIOD) * Math.PI * 2;
+  return (motionTime(t) / PEDAL_PERIOD) * Math.PI * 2;
 }
 
 /**

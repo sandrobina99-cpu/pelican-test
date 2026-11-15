@@ -1,4 +1,4 @@
-import { gagEnergy, INTRO_DUR, OUTRO_START, sectionStart, TOTAL } from "../beat/timeline.js";
+import { gagEnergy, INTRO_DUR, OUTRO_START, sectionStart, TOTAL, worldX } from "../beat/timeline.js";
 import { ramp } from "../beat/cues.js";
 import { GROUND_Y, OUT_H, OUT_W, PLATE, PORTAL, TITLE } from "../beat/world.js";
 import { cameraAt, pxPerUnit, viewSize, worldToScreen } from "./camera.js";
@@ -8,8 +8,10 @@ import { eraLine } from "../scenes/catalog.js";
 import { SCENES } from "../scenes/index.js";
 import { paintIntro } from "../scenes/intro.js";
 import { paintOutro } from "../scenes/outro.js";
+import { styleForSection } from "../config.js";
 import { poseAt } from "../rig/pose.js";
 import { drawRig } from "../rig/draw.js";
+import { drawStyledRig } from "../rig/styles.js";
 
 function drawPortal(p, cam, x) {
   const s = pxPerUnit(cam);
@@ -38,12 +40,11 @@ function drawRoadMarks(p, cam) {
   const left = cam.x - w / 2 - 20;
   const right = cam.x + w / 2 + 20;
   const y = GROUND_Y;
-  const [x0, y0] = worldToScreen(left, y, cam);
-  const [x1] = worldToScreen(right, y, cam);
   const weight = Math.max(2, 3.2 * (pxPerUnit(cam) / 1.08));
+  if (cam.zoom < 0.72) return;
   p.stroke(20, 14, 10, 150);
   p.strokeWeight(weight);
-  p.line(x0, y0, x1, y0);
+  strokeOutsideArt(p, cam, left, right, y);
 
   const dashY = GROUND_Y + 62;
   const period = 92;
@@ -51,6 +52,7 @@ function drawRoadMarks(p, cam) {
   let x = Math.floor(left / period) * period;
   p.strokeCap(p.SQUARE);
   for (; x < right; x += period) {
+    if (hidesRoadMarks(x)) continue;
     const [ax, ay] = worldToScreen(x, dashY, cam);
     const [bx] = worldToScreen(x + dash, dashY, cam);
     p.stroke(24, 18, 12, 110);
@@ -76,8 +78,11 @@ function paintWorld(p, ctx, t) {
   const k0 = Math.max(1, Math.floor(left / 1000) + 1);
   const k1 = Math.min(20, Math.floor((right - 1) / 1000) + 1);
   const unit = pxPerUnit(cam);
+  const order = [];
+  for (let k = k0; k <= k1; k++) order.push(k);
+  order.sort((a, b) => (SCENES[a - 1].meta.paintLast ? 1 : 0) - (SCENES[b - 1].meta.paintLast ? 1 : 0));
 
-  for (let k = k0; k <= k1; k++) {
+  for (const k of order) {
     const origin = (k - 1) * 1000;
     const [sx, sy] = worldToScreen(origin, 0, cam);
     const localT = t - sectionStart(k);
@@ -93,17 +98,20 @@ function paintWorld(p, ctx, t) {
   for (let k = Math.max(1, k0); k <= k1 + 1; k++) {
     const portalX = (k - 1) * 1000;
     if (portalX < left - 400 || portalX > right + 400) continue;
+    if (cam.zoom < 0.72) continue;
     drawPortal(p, cam, portalX);
   }
 
   const pose = poseAt(t);
   const [rx, ry] = worldToScreen(pose.worldX - pose.anchorX, GROUND_Y, cam);
+  const riderStyle = styleForSection(sectionOf(pose.worldX));
   p.push();
   p.translate(rx, ry);
   p.scale(unit, -unit);
   const gl = p.drawingContext;
   gl.disable(gl.CULL_FACE);
-  drawRig(p, pose, "default");
+  if (riderStyle === "default") drawRig(p, pose, "default");
+  else drawStyledRig(p, pose, riderStyle);
   p.pop();
 
   const titleAlpha = t >= INTRO_DUR ? 1 : ramp(t, 4.72, INTRO_DUR);
@@ -117,6 +125,8 @@ function paintWorld(p, ctx, t) {
       const origin = (k - 1) * 1000;
       const cx = origin + PLATE.x + PLATE.w / 2;
       const [tx, ty] = worldToScreen(cx, TITLE.zh.y, cam);
+      if (meta.skipTitle) continue;
+      if (cam.zoom < 0.9 && k !== sectionOf(worldX(t))) continue;
       if (tx < -360 || tx > OUT_W + 360) continue;
       ctx.fillStyle = meta.ink;
       setFont(ctx, SERIF, TITLE.zh.size * unit, 600);
@@ -130,6 +140,41 @@ function paintWorld(p, ctx, t) {
     }
     ctx.restore();
   }
+
+  for (let k = k0; k <= k1; k++) {
+    const scene = SCENES[k - 1];
+    if (!scene.overlay) continue;
+    scene.overlay(ctx, { t, localT: t - sectionStart(k), cam });
+  }
+}
+
+function sectionOf(x) {
+  return Math.floor(x / 1000) + 1;
+}
+
+function strokeOutsideArt(p, cam, left, right, y) {
+  const cuts = [0, 1000, 3800, 5200];
+  let x = left;
+  const spans = [];
+  for (let i = 0; i < cuts.length; i += 2) {
+    const a = cuts[i];
+    const b = cuts[i + 1];
+    if (x < a) spans.push([x, Math.min(right, a)]);
+    x = Math.max(x, b);
+  }
+  if (x < right) spans.push([x, right]);
+  for (const [a, b] of spans) {
+    if (b - a < 8) continue;
+    const [ax, ay] = worldToScreen(a, y, cam);
+    const [bx] = worldToScreen(b, y, cam);
+    p.line(ax, ay, bx, ay);
+  }
+}
+
+function hidesRoadMarks(x) {
+  if (x >= -30 && x <= 1030) return true;
+  if (x >= 3970 && x <= 5030) return true;
+  return false;
 }
 
 /**
