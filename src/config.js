@@ -46,5 +46,9 @@ export function styleForSection(id) {
   if (id === 8) return "mughal";
   if (id === 9) return "bada";
   if (id === 11) return "ukiyo";
+  if (id === 12) return "starry";
+  if (id === 13) return "scream";
+  if (id === 14) return "shadow";
+  if (id === 15) return "scope";
   return "default";
 }
