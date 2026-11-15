@@ -10,6 +10,7 @@ Press Start 2P are copied unmodified.
 from __future__ import annotations
 
 import urllib.request
+import zipfile
 from pathlib import Path
 
 from fontTools.subset import Options, Subsetter
@@ -26,6 +27,12 @@ SOURCES = {
     "mono": "https://fonts.gstatic.com/s/notosansmono/v37/BngrUXNETWXI6LwhGYvaxZikqZqK6fBq6kPvUce2oAZcdthSBUsYck4-_FNJ49o.ttf",
     "pixel": "https://fonts.gstatic.com/s/pressstart2p/v16/e3t4euO8T-267oIAQAu6jDQyK0nS.ttf",
 }
+
+FUSION_ZIP = (
+    "https://github.com/TakWolf/fusion-pixel-font/releases/download/"
+    "2026.11.10/fusion-pixel-font-12px-monospaced-ttf-v2026.11.10.zip"
+)
+FUSION_NAME = "fusion-pixel-12px-monospaced-zh_hans.ttf"
 
 
 def fetch(key: str) -> Path:
@@ -89,6 +96,36 @@ def subset(src: Path, dest: Path, family: str, style: str, ps: str, text: str) -
     print(f"{dest.name}: {dest.stat().st_size // 1024} KB, glyphs {font['maxp'].numGlyphs}")
 
 
+def fetch_fusion() -> Path:
+    dest = CACHE / FUSION_NAME
+    if dest.exists() and dest.stat().st_size > 1000:
+        return dest
+    CACHE.mkdir(parents=True, exist_ok=True)
+    zip_path = CACHE / "fusion-pixel-12px-monospaced-ttf.zip"
+    urllib.request.urlretrieve(FUSION_ZIP, zip_path)
+    with zipfile.ZipFile(zip_path) as bundle:
+        bundle.extract(FUSION_NAME, CACHE)
+    return dest
+
+
+def pixel_charset() -> str:
+    text = (ROOT / "src/scenes/s16-pixel.js").read_text(encoding="utf-8")
+    extra = "".join(chr(c) for c in range(32, 127))
+    extra += "——「」· "
+    return text + extra
+
+
+def subset_pixel() -> None:
+    subset(
+        fetch_fusion(),
+        OUT / "PelicanPixel-12.ttf",
+        "Pelican Pixel",
+        "Regular",
+        "PelicanPixel-12",
+        pixel_charset(),
+    )
+
+
 def main() -> None:
     text = charset()
     OUT.mkdir(parents=True, exist_ok=True)
@@ -100,6 +137,7 @@ def main() -> None:
     (OUT / "NotoSansMono-Regular.ttf").write_bytes(mono.read_bytes())
     (OUT / "PressStart2P-Regular.ttf").write_bytes(pixel.read_bytes())
     print("copied mono and Press Start 2P")
+    subset_pixel()
 
 
 if __name__ == "__main__":

@@ -59,7 +59,7 @@ function lerpCam(a, b, u) {
  */
 function songCamera(t, localT, base) {
   const px = worldX(t);
-  const wide = { x: 4500, y: 340, zoom: 0.4, push: base.push, lead: 0 };
+  const wide = { x: 4580, y: 400, zoom: 0.62, push: base.push, lead: 0 };
   const tight = {
     x: px,
     y: GROUND_Y - 70,

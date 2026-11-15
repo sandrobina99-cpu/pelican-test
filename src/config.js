@@ -28,6 +28,10 @@ export function motionScale(sectionId, localT) {
 /** How the shared skeleton is drawn while the rider is inside a section. */
 export function styleForSection(id) {
   if (id === 1) return "rock";
+  if (id === 3) return "rubbing";
+  if (id === 4) return "tang";
   if (id === 5) return "ink";
+  if (id === 6) return "qingming";
+  if (id === 9) return "bada";
   return "default";
 }

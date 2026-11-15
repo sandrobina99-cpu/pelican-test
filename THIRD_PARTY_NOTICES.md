@@ -21,5 +21,6 @@ SIL Open Font License 1.1. Full text: `public/fonts/OFL-1.1.txt`. Credits: `publ
 - **Pelican Sans Regular / Bold** — subsets of Noto Sans SC. Copyright (c) 2014-2021 Adobe, with Reserved Font Name "Source". Distributed here under new family names, not under "Noto" or "Source".
 - **Noto Sans Mono Regular** — Copyright 2022 The Noto Project Authors. Copied unmodified.
 - **Press Start 2P** — Copyright 2012 The Press Start 2P Project Authors (cody@zone38.net), with Reserved Font Name "Press Start 2P". Copied unmodified.
+- **Pelican Pixel** — subset of Fusion Pixel 12px Mono zh-Hans, release 2026.11.10. Copyright (c) 2022 TakWolf (https://takwolf.com). The upstream copyright does not declare a Reserved Font Name. This file is renamed because it is a subset, used for the 8-bit section's Chinese (and the Latin that sits on the same title card). License copy: `public/fonts/licenses/fusion-pixel/OFL.txt`. Fusion Pixel also incorporates Ark Pixel (Copyright (c) 2021 TakWolf, OFL), Cubic 11, and Galmuri (Copyright (c) 2019–2025 Lee Minseo, OFL). Those upstream texts are in `public/fonts/licenses/fusion-pixel/upstream/`.
 
 No macOS system fonts are used.

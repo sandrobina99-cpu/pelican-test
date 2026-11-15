@@ -3,7 +3,7 @@ import { ramp } from "../beat/cues.js";
 import { GROUND_Y, OUT_H, OUT_W, PLATE, PORTAL, TITLE } from "../beat/world.js";
 import { cameraAt, pxPerUnit, viewSize, worldToScreen } from "./camera.js";
 import { enterStage } from "../kit/stage.js";
-import { SANS, SERIF, setFont, text } from "../kit/text2d.js";
+import { pixelText, SANS, SERIF, setFont, text } from "../kit/text2d.js";
 import { eraLine } from "../scenes/catalog.js";
 import { SCENES } from "../scenes/index.js";
 import { paintIntro } from "../scenes/intro.js";
@@ -12,6 +12,7 @@ import { styleForSection } from "../config.js";
 import { poseAt } from "../rig/pose.js";
 import { drawRig } from "../rig/draw.js";
 import { drawStyledRig } from "../rig/styles.js";
+import { drawInkBird } from "../rig/inkbird.js";
 
 function drawPortal(p, cam, x) {
   const s = pxPerUnit(cam);
@@ -66,11 +67,13 @@ function drawRoadMarks(p, cam) {
 
 function paintWorld(p, ctx, t) {
   const cam = cameraAt(t);
-  const { w } = viewSize(cam);
+  const { w, h } = viewSize(cam);
   const left = cam.x - w / 2 - 80;
   const right = cam.x + w / 2 + 80;
-  const [x0, y0] = worldToScreen(left, 0, cam);
-  const [x1, y1] = worldToScreen(right, 1000, cam);
+  const top = cam.y - h / 2 - 80;
+  const bot = cam.y + h / 2 + 80;
+  const [x0, y0] = worldToScreen(left, top, cam);
+  const [x1, y1] = worldToScreen(right, bot, cam);
   p.noStroke();
   p.fill("#e6dcc6");
   p.rect(x0, y0, x1 - x0, y1 - y0);
@@ -111,7 +114,8 @@ function paintWorld(p, ctx, t) {
   const gl = p.drawingContext;
   gl.disable(gl.CULL_FACE);
   if (riderStyle === "default") drawRig(p, pose, "default");
-  else drawStyledRig(p, pose, riderStyle);
+  else if (riderStyle === "rock") drawStyledRig(p, pose, riderStyle);
+  else drawInkBird(p, pose, riderStyle);
   p.pop();
 
   const titleAlpha = t >= INTRO_DUR ? 1 : ramp(t, 4.72, INTRO_DUR);
@@ -129,6 +133,14 @@ function paintWorld(p, ctx, t) {
       if (cam.zoom < 0.9 && k !== sectionOf(worldX(t))) continue;
       if (tx < -360 || tx > OUT_W + 360) continue;
       ctx.fillStyle = meta.ink;
+      if (meta.titleFace === "pixel") {
+        pixelText(ctx, meta.zh, tx, ty, TITLE.zh.size * unit, "center");
+        const [ex, ey] = worldToScreen(cx, TITLE.en.y, cam);
+        pixelText(ctx, meta.en, ex, ey, TITLE.en.size * unit, "center");
+        const [ax, ay] = worldToScreen(cx, TITLE.era.y, cam);
+        pixelText(ctx, eraLine(meta), ax, ay, TITLE.era.size * unit, "center");
+        continue;
+      }
       setFont(ctx, SERIF, TITLE.zh.size * unit, 600);
       text(ctx, meta.zh, tx, ty);
       const [ex, ey] = worldToScreen(cx, TITLE.en.y, cam);
@@ -153,7 +165,7 @@ function sectionOf(x) {
 }
 
 function strokeOutsideArt(p, cam, left, right, y) {
-  const cuts = [0, 1000, 3800, 5200];
+  const cuts = [0, 1000, 2000, 6000, 8000, 9000];
   let x = left;
   const spans = [];
   for (let i = 0; i < cuts.length; i += 2) {
@@ -173,7 +185,8 @@ function strokeOutsideArt(p, cam, left, right, y) {
 
 function hidesRoadMarks(x) {
   if (x >= -30 && x <= 1030) return true;
-  if (x >= 3970 && x <= 5030) return true;
+  if (x >= 1970 && x <= 6030) return true;
+  if (x >= 7970 && x <= 9030) return true;
   return false;
 }
 
