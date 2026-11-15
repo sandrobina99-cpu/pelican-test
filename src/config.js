@@ -19,19 +19,32 @@ export const FILM = {
  * Section 5 (Song) eases off in bar 2 while the camera finds the pelican.
  */
 export function motionScale(sectionId, localT) {
-  if (sectionId !== 5) return 1;
-  if (localT < 2) return 1.2;
-  if (localT < 4) return 0.15;
-  return 1.65;
+  if (sectionId === 5) {
+    if (localT < 2) return 1.2;
+    if (localT < 4) return 0.15;
+    return 1.65;
+  }
+  // Egypt bar 2 nearly freezes into the mural stride. The other two bars
+  // speed up so the next frame is still met on the beat: 3 + 0.1 + 2.9 = 6.
+  if (sectionId === 2) {
+    if (localT < 2) return 1.5;
+    if (localT < 4) return 0.05;
+    return 1.45;
+  }
+  return 1;
 }
 
 /** How the shared skeleton is drawn while the rider is inside a section. */
 export function styleForSection(id) {
   if (id === 1) return "rock";
+  if (id === 2) return "egypt";
   if (id === 3) return "rubbing";
   if (id === 4) return "tang";
   if (id === 5) return "ink";
   if (id === 6) return "qingming";
+  if (id === 7) return "maya";
+  if (id === 8) return "mughal";
   if (id === 9) return "bada";
+  if (id === 11) return "ukiyo";
   return "default";
 }

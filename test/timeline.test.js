@@ -92,6 +92,7 @@ test("song bar 2 slows down and still reaches the next frame", () => {
   assert.equal(integratedScale(1, 6), 6);
   assert.ok(Math.abs(integratedScale(5, 6) - 6) < 1e-9);
   assert.ok(integratedScale(5, 3) < 3);
+  assert.equal(worldX(17), 2000);
   assert.equal(worldX(29), 4000);
   assert.equal(worldX(35), 5000);
   assert.equal(worldX(125), 20000);

@@ -74,6 +74,23 @@ function songCamera(t, localT, base) {
   return lerpCam(tight, base, smoothstep((localT - 4.2) / 1.2));
 }
 
+/** Egypt bar 2: the rider eases to a stop and the camera stays on that pose. */
+function egyptCamera(t, localT, base) {
+  if (FILM.bar2FreezeCamera !== "hold-on-pelican") return base;
+  const hold = {
+    x: worldX(t),
+    y: GROUND_Y - 90,
+    zoom: 1.12,
+    push: base.push,
+    lead: 0,
+  };
+  if (localT < 1.55) return base;
+  if (localT < 2.1) return lerpCam(base, hold, smoothstep((localT - 1.55) / 0.55));
+  if (localT < 4.05) return hold;
+  if (localT < 4.75) return lerpCam(hold, base, smoothstep((localT - 4.05) / 0.7));
+  return base;
+}
+
 /** Vertical video: keep the rider inside the centered 9:16 column. */
 function verticalCamera(t, base) {
   return { ...base, x: worldX(t) + 140 * (1 - base.lead), lead: base.lead };
@@ -83,6 +100,7 @@ function verticalCamera(t, base) {
 export function cameraAt(t) {
   const base = standardCamera(t);
   const info = at(t);
+  if (info.kind === "section" && info.section === 2) return egyptCamera(t, info.localT, base);
   if (info.kind === "section" && info.section === 5) return songCamera(t, info.localT, base);
   if (info.kind === "section" && info.section === 19) return verticalCamera(t, base);
   return base;

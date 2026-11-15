@@ -13,6 +13,7 @@ import { poseAt } from "../rig/pose.js";
 import { drawRig } from "../rig/draw.js";
 import { drawStyledRig } from "../rig/styles.js";
 import { drawInkBird } from "../rig/inkbird.js";
+import { drawPeriodRig } from "../rig/period.js";
 
 function drawPortal(p, cam, x) {
   const s = pxPerUnit(cam);
@@ -115,7 +116,9 @@ function paintWorld(p, ctx, t) {
   gl.disable(gl.CULL_FACE);
   if (riderStyle === "default") drawRig(p, pose, "default");
   else if (riderStyle === "rock") drawStyledRig(p, pose, riderStyle);
-  else drawInkBird(p, pose, riderStyle);
+  else if (riderStyle === "egypt" || riderStyle === "maya" || riderStyle === "mughal" || riderStyle === "ukiyo") {
+    drawPeriodRig(p, pose, riderStyle);
+  } else drawInkBird(p, pose, riderStyle);
   p.pop();
 
   const titleAlpha = t >= INTRO_DUR ? 1 : ramp(t, 4.72, INTRO_DUR);
@@ -165,7 +168,7 @@ function sectionOf(x) {
 }
 
 function strokeOutsideArt(p, cam, left, right, y) {
-  const cuts = [0, 1000, 2000, 6000, 8000, 9000];
+  const cuts = [0, 9000, 10000, 11000];
   let x = left;
   const spans = [];
   for (let i = 0; i < cuts.length; i += 2) {
@@ -184,9 +187,8 @@ function strokeOutsideArt(p, cam, left, right, y) {
 }
 
 function hidesRoadMarks(x) {
-  if (x >= -30 && x <= 1030) return true;
-  if (x >= 1970 && x <= 6030) return true;
-  if (x >= 7970 && x <= 9030) return true;
+  if (x >= -30 && x <= 9030) return true;
+  if (x >= 9970 && x <= 11030) return true;
   return false;
 }
 

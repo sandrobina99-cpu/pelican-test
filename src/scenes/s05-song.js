@@ -44,7 +44,7 @@ const RIGHT = [
 export default {
   meta,
   draw(p) {
-    const g = bake(p, "song-ink-1", 1000, 1460, paint);
+    const g = bake(p, "song-ink-2", 1000, 1460, paint);
     p.image(g, 0, -460);
   },
 };
@@ -56,7 +56,9 @@ function paint(g) {
   washPoly(g, RIGHT, 24);
   dots(g, LEFT, 700, 21, 0.4);
   dots(g, RIGHT, 500, 22, 0.35);
-  washPoly(g, PEAK, 92);
+  washPoly(g, PEAK, 130);
+  wetEdge(g, PEAK);
+  pools(g);
   dots(g, PEAK, 6400, 11, 1);
   hemp(g);
   falls(g);
@@ -84,9 +86,37 @@ function washPoly(g, poly, alphaBase) {
   const maxY = Math.max(...ys);
   for (let y = minY; y < maxY; y += 2) {
     const depth = (y - minY) / (maxY - minY || 1);
-    g.stroke(36, 30, 24, alphaBase * (0.08 + depth * depth * 1.15));
+    const ink = depth < 0.35 ? 70 : 28;
+    g.stroke(ink, ink - 4, ink - 8, alphaBase * (0.04 + depth * depth * 1.35));
     g.strokeWeight(2.1);
     for (const [x0, x1] of polySpans(poly, y)) g.line(x0, y, x1, y);
+  }
+}
+
+function wetEdge(g, poly) {
+  g.noFill();
+  for (const [weight, alpha] of [[28, 22], [14, 40], [6, 70]]) {
+    g.stroke(48, 40, 32, alpha);
+    g.strokeWeight(weight);
+    g.beginShape();
+    for (const [x, y] of poly) g.vertex(x, y);
+    g.endShape(g.CLOSE);
+  }
+}
+
+function pools(g) {
+  g.noStroke();
+  const blobs = [
+    [400, 560, 200, 70, 55],
+    [560, 420, 140, 48, 40],
+    [300, 340, 90, 36, 28],
+    [680, 500, 110, 40, 36],
+  ];
+  for (const [x, y, w, h, a] of blobs) {
+    g.fill(26, 22, 18, a);
+    g.ellipse(x, y, w, h);
+    g.fill(232, 226, 214, 18);
+    g.ellipse(x - 8, y - 6, w * 0.45, h * 0.4);
   }
 }
 
