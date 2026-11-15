@@ -7,6 +7,7 @@ import { drawStyledRig } from "../rig/styles.js";
 import { drawInkBird } from "../rig/inkbird.js";
 import { drawPeriodRig } from "../rig/period.js";
 import { drawModernRig } from "../rig/modern.js";
+import { drawLateRig } from "../rig/late.js";
 import { ANCHOR_X, GRID, GROUND_Y, OUT_H, OUT_W } from "../beat/world.js";
 import { SECTIONS } from "./catalog.js";
 import { SANS, SERIF, roundRect, setFont, text } from "../kit/text2d.js";
@@ -111,8 +112,10 @@ function drawThumb(p, meta) {
   else if (style === "rock") drawStyledRig(p, pose, style);
   else if (style === "egypt" || style === "maya" || style === "mughal" || style === "ukiyo") {
     drawPeriodRig(p, pose, style);
-  } else if (style === "starry" || style === "scream" || style === "shadow" || style === "scope") {
+  }   else if (style === "starry" || style === "scream" || style === "shadow" || style === "scope") {
     drawModernRig(p, pose, style);
+  } else if (style === "wayang" || style === "pixel" || style === "vapor" || style === "code" || style === "chat") {
+    drawLateRig(p, pose, style);
   } else drawInkBird(p, pose, style);
   p.pop();
   p.pop();

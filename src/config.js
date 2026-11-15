@@ -45,10 +45,15 @@ export function styleForSection(id) {
   if (id === 7) return "maya";
   if (id === 8) return "mughal";
   if (id === 9) return "bada";
+  if (id === 10) return "wayang";
   if (id === 11) return "ukiyo";
   if (id === 12) return "starry";
   if (id === 13) return "scream";
   if (id === 14) return "shadow";
   if (id === 15) return "scope";
+  if (id === 16) return "pixel";
+  if (id === 17) return "chat";
+  if (id === 18) return "vapor";
+  if (id === 20) return "code";
   return "default";
 }

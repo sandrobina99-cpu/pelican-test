@@ -15,6 +15,7 @@ import { drawStyledRig } from "../rig/styles.js";
 import { drawInkBird } from "../rig/inkbird.js";
 import { drawPeriodRig } from "../rig/period.js";
 import { drawModernRig } from "../rig/modern.js";
+import { drawLateRig } from "../rig/late.js";
 
 function drawPortal(p, cam, x) {
   const s = pxPerUnit(cam);
@@ -119,9 +120,11 @@ function paintWorld(p, ctx, t) {
   else if (riderStyle === "rock") drawStyledRig(p, pose, riderStyle);
   else if (riderStyle === "egypt" || riderStyle === "maya" || riderStyle === "mughal" || riderStyle === "ukiyo") {
     drawPeriodRig(p, pose, riderStyle);
-  } else if (riderStyle === "starry" || riderStyle === "scream" || riderStyle === "shadow" || riderStyle === "scope") {
+  }   else if (riderStyle === "starry" || riderStyle === "scream" || riderStyle === "shadow" || riderStyle === "scope") {
     drawModernRig(p, pose, riderStyle);
-  } else drawInkBird(p, pose, riderStyle);
+  } else if (riderStyle === "wayang" || riderStyle === "pixel" || riderStyle === "vapor" || riderStyle === "code") {
+    drawLateRig(p, pose, riderStyle);
+  } else if (riderStyle !== "chat") drawInkBird(p, pose, riderStyle);
   p.pop();
 
   const titleAlpha = t >= INTRO_DUR ? 1 : ramp(t, 4.72, INTRO_DUR);
@@ -171,7 +174,7 @@ function sectionOf(x) {
 }
 
 function strokeOutsideArt(p, cam, left, right, y) {
-  const cuts = [0, 9000, 10000, 15000];
+  const cuts = [0, 18000, 19000, 20000];
   let x = left;
   const spans = [];
   for (let i = 0; i < cuts.length; i += 2) {
@@ -190,8 +193,8 @@ function strokeOutsideArt(p, cam, left, right, y) {
 }
 
 function hidesRoadMarks(x) {
-  if (x >= -30 && x <= 9030) return true;
-  if (x >= 9970 && x <= 15030) return true;
+  if (x >= -30 && x <= 18030) return true;
+  if (x >= 18970 && x <= 20030) return true;
   return false;
 }
 

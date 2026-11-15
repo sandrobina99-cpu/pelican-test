@@ -132,6 +132,7 @@ async function fontsReady() {
     document.fonts.load('400 32px "Pelican Sans"'),
     document.fonts.load('700 28px "Pelican Sans"'),
     document.fonts.load('12px "Pelican Pixel"'),
+    document.fonts.load('16px "Press Start 2P"'),
   ]);
 }
 
